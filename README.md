@@ -105,6 +105,7 @@ class Entry extends Events
 {
     /**
      * create an entry in the update loop
+     * used by Loop
      * @param {function} callback
      * @param {number} [time=0] in milliseconds to call this update
      * @param {number} [count] number of times to run this update (undefined=infinite)
@@ -117,6 +118,11 @@ class Entry extends Events
      * @return {boolean} whether entry is complete and may be removed from list
      */
     update(elapsed)
+
+    /**
+     * @type {boolean} pause this entry
+     */
+    set pause(value)
 ```
 ## License  
 MIT License  

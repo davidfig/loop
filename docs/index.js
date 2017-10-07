@@ -17374,10 +17374,11 @@ module.exports = function(hljs) {
 const Events = require('eventemitter3')
 
 /** Entry class for Loop */
-module.exports = class Entry extends Events
+class Entry extends Events
 {
     /**
      * create an entry in the update loop
+     * used by Loop
      * @param {function} callback
      * @param {number} [time=0] in milliseconds to call this update
      * @param {number} [count] number of times to run this update (undefined=infinite)
@@ -17393,6 +17394,7 @@ module.exports = class Entry extends Events
 
     /**
      * run the callback if available
+     * @private
      * @param {number} elapsed
      */
     _update(elapsed)
@@ -17410,9 +17412,14 @@ module.exports = class Entry extends Events
         }
     }
 
+    /**
+     * update checks time and runs the callback
+     * @param {number} elapsed
+     * @return {boolean} whether entry is complete and may be removed from list
+     */
     update(elapsed)
     {
-        if (!this.pause)
+        if (!this._pause)
         {
             if (this.time)
             {
@@ -17429,7 +17436,21 @@ module.exports = class Entry extends Events
             }
         }
     }
+
+    /**
+     * @type {boolean} pause this entry
+     */
+    set pause(value)
+    {
+        this._pause = value
+    }
+    get pause()
+    {
+        return this._pause
+    }
 }
+
+module.exports = Entry
 },{"eventemitter3":4}],185:[function(require,module,exports){
 /* Copyright (c) 2017 YOPEY YOPEY LLC */
 
