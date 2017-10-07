@@ -3,7 +3,7 @@ const Loop = require('..')
 function test()
 {
     // create loop
-    const loop = new Loop()
+    const loop = new Loop({ pauseOnBlur: true })
 
     // timer that calls function each frame
     let total = 0

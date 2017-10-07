@@ -4,7 +4,7 @@ const Loop = require('..')
 function test()
 {
     // create loop
-    const loop = new Loop()
+    const loop = new Loop({ pauseOnBlur: true })
 
     // timer that calls function each frame
     let total = 0
@@ -17498,19 +17498,6 @@ class Loop extends Events
     }
 
     /**
-     * handler for blur event
-     * @private
-     */
-    stopBlur()
-    {
-        if (this.running)
-        {
-            this.blurred = true
-            this.stop()
-        }
-    }
-
-    /**
      * handler for focus event
      * @private
      */
@@ -17519,6 +17506,19 @@ class Loop extends Events
         if (this.blurred)
         {
             this.start()
+        }
+    }
+
+    /**
+     * handler for blur event
+     * @private
+     */
+    stopBlur()
+    {
+        if (this.running)
+        {
+            this.stop()
+            this.blurred = true
         }
     }
 
