@@ -17463,7 +17463,7 @@ class Loop extends Events
      * note: the default is to stop the loop when app loses focus
      * @param {object} [options]
      * @param {number} [options.maxFrameTime=1000 / 60] maximum time in milliseconds for a frame
-     * @param {object} [options.noPause] do not stop loop when app loses focus
+     * @param {object} [options.pauseOnBlur] pause loop when app loses focus, start it when app regains focus
      *
      * @event each(elapsed, Loop)
      * @event start(Loop)
@@ -17474,32 +17474,64 @@ class Loop extends Events
         super()
         options = options || {}
         this.maxFrameTime = options.maxFrameTime || 1000 / 60
-        if (!options.noPause)
+        if (options.pauseOnBlur)
         {
-            window.addEventListener('blur', this.stop.bind(this))
-            window.addEventListener('focus', this.start.bind(this))
+            window.addEventListener('blur', this.stopBlur.bind(this))
+            window.addEventListener('focus', this.startBlur.bind(this))
         }
         this.list = []
     }
 
     /**
      * start requestAnimationFrame() loop
+     * @return {Loop} this
      */
     start()
     {
-        this.running = performance.now()
-        this.update()
-        this.emit('start', this)
+        if (!this.running)
+        {
+            this.running = performance.now()
+            this.update()
+            this.emit('start', this)
+        }
         return this
     }
 
     /**
+     * handler for blur event
+     * @private
+     */
+    stopBlur()
+    {
+        if (this.running)
+        {
+            this.blurred = true
+            this.stop()
+        }
+    }
+
+    /**
+     * handler for focus event
+     * @private
+     */
+    startBlur()
+    {
+        if (this.blurred)
+        {
+            this.start()
+        }
+    }
+
+    /**
      * stop loop
+     * @return {Loop} this
      */
     stop()
     {
         this.running = false
+        this.blurred = false
         this.emit('stop', this)
+        return this
     }
 
     /**

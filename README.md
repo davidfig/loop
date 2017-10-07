@@ -10,7 +10,7 @@ Simple and configurable game/main loop
 
 ## rationale
 
-This is a replacement for [YY-Update](https://github.com/davidfig/update). I use this in all my games, and as a base class for my other libraries, including [pixi-ease](https://github.com/davidfig/pixi-ease) and [pixi-viewport](https://github.com/davidfig/pixi-ease).
+This is a replacement for [YY-Update](https://github.com/davidfig/update). I use this in all my games, and as a base class for my other libraries, including [pixi-ease](https://github.com/davidfig/pixi-ease) and [pixi-viewport](https://github.com/davidfig/pixi-viewport).
 
 ## installation
 
@@ -45,7 +45,7 @@ https://davidfig.github.io/loop/
      * note: the default is to stop the loop when app loses focus
      * @param {object} [options]
      * @param {number} [options.maxFrameTime=1000 / 60] maximum time in milliseconds for a frame
-     * @param {object} [options.noPause] do not stop loop when app loses focus
+     * @param {object} [options.pauseOnBlur] pause loop when app loses focus, start it when app regains focus
      *
      * @event each(elapsed, Loop)
      * @event start(Loop)
@@ -55,11 +55,13 @@ https://davidfig.github.io/loop/
 
     /**
      * start requestAnimationFrame() loop
+     * @return {Loop} this
      */
     start()
 
     /**
      * stop loop
+     * @return {Loop} this
      */
     stop()
 
