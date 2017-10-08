@@ -11,7 +11,7 @@ class Loop extends Events
      * @param {number} [options.maxFrameTime=1000 / 60] maximum time in milliseconds for a frame
      * @param {object} [options.pauseOnBlur] pause loop when app loses focus, start it when app regains focus
      *
-     * @event each(elapsed, Loop)
+     * @event each(elapsed, Loop, elapsedInLoop)
      * @event start(Loop)
      * @event stop(Loop)
      */
@@ -97,7 +97,7 @@ class Loop extends Events
                     this.remove(entry)
                 }
             }
-            this.emit('each', elapsed, this)
+            this.emit('each', elapsed, this, now - performance.now())
             requestAnimationFrame(this.update.bind(this))
         }
     }
