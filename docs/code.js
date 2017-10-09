@@ -1,10 +1,13 @@
 const Loop = require('..')
+const FPS = require('yy-fps')
+
+let fps
 
 function test()
 {
     // create loop
     const loop = new Loop({ pauseOnBlur: true })
-
+    loop.add(() => fps.frame())
     // timer that calls function each frame
     let total = 0
     loop.add(
@@ -44,8 +47,7 @@ function test()
 
 window.onload = function ()
 {
-    div = document.getElementById('test')
-
+    fps = new FPS()
     test()
 
     require('fork-me-github')('https://github.com/davidfig/loop')
