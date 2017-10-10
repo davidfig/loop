@@ -66,18 +66,26 @@ https://davidfig.github.io/loop/
     stop()
 
     /**
-     * loop through updates
+     * loop through updates; can be called manually each frame, or called automatically as part of start()
      */
     update()
 
     /**
-     * add a callback to the update loop
+     * adds a callback to the loop
      * @param {function} callback
-     * @param {number} [time=0] in milliseconds to call this update
+     * @param {number} [time=0] in milliseconds to call this update (0=every frame)
      * @param {number} [count=0] number of times to run this update (0=infinite)
      * @return {object} entry - used to remove or change the parameters of the update
      */
-    add(callback, time, count)
+    interval(callback, time, count)
+
+    /**
+     * adds a one-time callback to the loop
+     * @param {function} callback
+     * @param {number} time in milliseconds to call this update
+     * @return {object} entry - used to remove or change the parameters of the update
+     */
+    timeout(callback, time)
 
     /**
      * remove a callback from the loop

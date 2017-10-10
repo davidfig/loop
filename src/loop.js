@@ -37,7 +37,7 @@ class Loop extends Events
         if (!this.running)
         {
             this.running = performance.now()
-            this.update()
+            this.loop()
             this.emit('start', this)
         }
         return this
@@ -81,39 +81,59 @@ class Loop extends Events
     }
 
     /**
-     * loop through updates
+     * loop through updates; can be called manually each frame, or called automatically as part of start()
      */
     update()
     {
+        const now = performance.now()
+        let elapsed = now - this.running
+        elapsed = elapsed > this.maxFrameTime ? this.maxFrameTime : elapsed
+        for (let entry of this.list)
+        {
+            if (entry.update(elapsed))
+            {
+                this.remove(entry)
+            }
+        }
+        this.emit('each', elapsed, this, now - performance.now())
+    }
+
+    /**
+     * internal loop through animations
+     * @private
+     */
+    loop()
+    {
         if (this.running)
         {
-            const now = performance.now()
-            let elapsed = now - this.running
-            elapsed = elapsed > this.maxFrameTime ? this.maxFrameTime : elapsed
-            for (let entry of this.list)
-            {
-                if (entry.update(elapsed))
-                {
-                    this.remove(entry)
-                }
-            }
-            this.emit('each', elapsed, this, now - performance.now())
-            requestAnimationFrame(this.update.bind(this))
+            this.update()
+            requestAnimationFrame(this.loop.bind(this))
         }
     }
 
     /**
-     * add a callback to the update loop
+     * adds a callback to the loop
      * @param {function} callback
-     * @param {number} [time=0] in milliseconds to call this update
+     * @param {number} [time=0] in milliseconds to call this update (0=every frame)
      * @param {number} [count=0] number of times to run this update (0=infinite)
      * @return {object} entry - used to remove or change the parameters of the update
      */
-    add(callback, time, count)
+    interval(callback, time, count)
     {
         const entry = new Entry(callback, time, count)
         this.list.push(entry)
         return entry
+    }
+
+    /**
+     * adds a one-time callback to the loop
+     * @param {function} callback
+     * @param {number} time in milliseconds to call this update
+     * @return {object} entry - used to remove or change the parameters of the update
+     */
+    timeout(callback, time)
+    {
+        return this.interval(callback, time, 1)
     }
 
     /**
