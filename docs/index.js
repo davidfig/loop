@@ -18928,6 +18928,7 @@ class Loop extends Events
         if (this.blurred)
         {
             this.start()
+            this.blurred = false
         }
     }
 
