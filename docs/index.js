@@ -18991,6 +18991,10 @@ class Loop extends Events
             requestAnimationFrame(this.loop.bind(this))
             this.waiting = true
         }
+        else
+        {
+            this.waiting = false
+        }
     }
 
     /**
