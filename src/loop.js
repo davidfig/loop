@@ -37,7 +37,10 @@ class Loop extends Events
         if (!this.running)
         {
             this.running = performance.now()
-            this.loop()
+            if (!this.waiting)
+            {
+                this.loop()
+            }
             this.emit('start', this)
         }
         return this
@@ -107,8 +110,10 @@ class Loop extends Events
     {
         if (this.running)
         {
+            this.waiting = false
             this.update()
             requestAnimationFrame(this.loop.bind(this))
+            this.waiting = true
         }
     }
 
