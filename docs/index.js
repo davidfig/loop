@@ -18882,9 +18882,8 @@ class Loop extends Events
 {
     /**
      * basic loop support
-     * note: the default is to stop the loop when app loses focus
      * @param {object} [options]
-     * @param {number} [options.maxFrameTime=1000 / 60] maximum time in milliseconds for a frame
+     * @param {number} [options.maxFrameTime=1000/60] maximum time in milliseconds for a frame
      * @param {object} [options.pauseOnBlur] pause loop when app loses focus, start it when app regains focus
      *
      * @event each(elapsed, Loop, elapsedInLoop)
@@ -18912,7 +18911,7 @@ class Loop extends Events
     {
         if (!this.running)
         {
-            this.running = performance.now()
+            this.running = true
             if (!this.waiting)
             {
                 this.loop()
@@ -18966,7 +18965,7 @@ class Loop extends Events
     update()
     {
         const now = performance.now()
-        let elapsed = now - this.running
+        let elapsed = now - this.last ? this.last : 0
         elapsed = elapsed > this.maxFrameTime ? this.maxFrameTime : elapsed
         for (let entry of this.list)
         {
@@ -18976,6 +18975,7 @@ class Loop extends Events
             }
         }
         this.emit('each', elapsed, this, now - performance.now())
+        this.last = now
     }
 
     /**

@@ -42,9 +42,8 @@ https://davidfig.github.io/loop/
 ```
     /**
      * basic loop support
-     * note: the default is to stop the loop when app loses focus
      * @param {object} [options]
-     * @param {number} [options.maxFrameTime=1000 / 60] maximum time in milliseconds for a frame
+     * @param {number} [options.maxFrameTime=1000/60] maximum time in milliseconds for a frame
      * @param {object} [options.pauseOnBlur] pause loop when app loses focus, start it when app regains focus
      *
      * @event each(elapsed, Loop, elapsedInLoop)
