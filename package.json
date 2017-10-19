@@ -1,6 +1,6 @@
 {
     "name": "yy-loop",
-    "version": "0.3.4",
+    "version": "0.3.5",
     "description": "Simple and configurable game/update loop.",
     "main": "index.js",
     "directories": {
@@ -10,7 +10,7 @@
         "test": "budo --dir docs docs/code.js:index.js --live",
         "build": "browserify docs/code.js -o docs/index.js",
         "docs": "markdown-api README.md src/loop.js src/entry.js --header",
-        "prepare": "npm run build && npm run docs"
+        "prepare": "yarn run build && yarn run docs"
     },
     "repository": {
         "type": "git",
@@ -31,8 +31,8 @@
     "homepage": "https://github.com/davidfig/loop#readme",
     "devDependencies": {
         "fork-me-github": "^1.0.2",
-        "yy-fps": "^0.3.1",
-        "highlight.js": "^9.12.0"
+        "highlight.js": "^9.12.0",
+        "yy-fps": "^0.3.1"
     },
     "dependencies": {
         "eventemitter3": "^2.0.3"
