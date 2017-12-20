@@ -46,7 +46,7 @@ https://davidfig.github.io/loop/
      * @param {number} [options.maxFrameTime=1000/60] maximum time in milliseconds for a frame
      * @param {object} [options.pauseOnBlur] pause loop when app loses focus, start it when app regains focus
      *
-     * @event each(elapsed, Loop, elapsedInLoop)
+     * @event each(elapsed, Loop)
      * @event start(Loop)
      * @event stop(Loop)
      */
@@ -66,6 +66,7 @@ https://davidfig.github.io/loop/
 
     /**
      * loop through updates; can be called manually each frame, or called automatically as part of start()
+     * @param {number} elapsed time since last call (will be clamped to this.maxFrameTime)
      */
     update(elapsed)
 

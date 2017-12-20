@@ -9,6 +9,7 @@ function test()
     // create loop
     const loop = new Loop({ pauseOnBlur: true })
     loop.interval(() => fps.frame())
+
     // timer that calls function each frame
     let total = 0
     loop.interval(
@@ -54,7 +55,7 @@ window.onload = function ()
     require('fork-me-github')('https://github.com/davidfig/loop')
     require('./highlight')()
 }
-},{"..":3,"./highlight":2,"fork-me-github":5,"yy-fps":185}],2:[function(require,module,exports){
+},{"..":3,"./highlight":2,"fork-me-github":5,"yy-fps":186}],2:[function(require,module,exports){
 // shows the code in the demo
 module.exports = function highlight()
 {
@@ -73,7 +74,7 @@ module.exports = function highlight()
 /* globals window, XMLHttpRequest, document */
 },{"highlight.js":7}],3:[function(require,module,exports){
 module.exports = require('./src/loop')
-},{"./src/loop":187}],4:[function(require,module,exports){
+},{"./src/loop":188}],4:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty
@@ -84,7 +85,7 @@ var has = Object.prototype.hasOwnProperty
  * An `Events` instance is a plain object whose properties are event names.
  *
  * @constructor
- * @api private
+ * @private
  */
 function Events() {}
 
@@ -109,10 +110,10 @@ if (Object.create) {
  * Representation of a single event listener.
  *
  * @param {Function} fn The listener function.
- * @param {Mixed} context The context to invoke the listener with.
+ * @param {*} context The context to invoke the listener with.
  * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
  * @constructor
- * @api private
+ * @private
  */
 function EE(fn, context, once) {
   this.fn = fn;
@@ -121,11 +122,49 @@ function EE(fn, context, once) {
 }
 
 /**
+ * Add a listener for a given event.
+ *
+ * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} context The context to invoke the listener with.
+ * @param {Boolean} once Specify if the listener is a one-time listener.
+ * @returns {EventEmitter}
+ * @private
+ */
+function addListener(emitter, event, fn, context, once) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('The listener must be a function');
+  }
+
+  var listener = new EE(fn, context || emitter, once)
+    , evt = prefix ? prefix + event : event;
+
+  if (!emitter._events[evt]) emitter._events[evt] = listener, emitter._eventsCount++;
+  else if (!emitter._events[evt].fn) emitter._events[evt].push(listener);
+  else emitter._events[evt] = [emitter._events[evt], listener];
+
+  return emitter;
+}
+
+/**
+ * Clear event by name.
+ *
+ * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
+ * @param {(String|Symbol)} evt The Event name.
+ * @private
+ */
+function clearEvent(emitter, evt) {
+  if (--emitter._eventsCount === 0) emitter._events = new Events();
+  else delete emitter._events[evt];
+}
+
+/**
  * Minimal `EventEmitter` interface that is molded against the Node.js
  * `EventEmitter` interface.
  *
  * @constructor
- * @api public
+ * @public
  */
 function EventEmitter() {
   this._events = new Events();
@@ -137,7 +176,7 @@ function EventEmitter() {
  * listeners.
  *
  * @returns {Array}
- * @api public
+ * @public
  */
 EventEmitter.prototype.eventNames = function eventNames() {
   var names = []
@@ -160,32 +199,46 @@ EventEmitter.prototype.eventNames = function eventNames() {
 /**
  * Return the listeners registered for a given event.
  *
- * @param {String|Symbol} event The event name.
- * @param {Boolean} exists Only check if there are listeners.
- * @returns {Array|Boolean}
- * @api public
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Array} The registered listeners.
+ * @public
  */
-EventEmitter.prototype.listeners = function listeners(event, exists) {
+EventEmitter.prototype.listeners = function listeners(event) {
   var evt = prefix ? prefix + event : event
-    , available = this._events[evt];
+    , handlers = this._events[evt];
 
-  if (exists) return !!available;
-  if (!available) return [];
-  if (available.fn) return [available.fn];
+  if (!handlers) return [];
+  if (handlers.fn) return [handlers.fn];
 
-  for (var i = 0, l = available.length, ee = new Array(l); i < l; i++) {
-    ee[i] = available[i].fn;
+  for (var i = 0, l = handlers.length, ee = new Array(l); i < l; i++) {
+    ee[i] = handlers[i].fn;
   }
 
   return ee;
 };
 
 /**
+ * Return the number of listeners listening to a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Number} The number of listeners.
+ * @public
+ */
+EventEmitter.prototype.listenerCount = function listenerCount(event) {
+  var evt = prefix ? prefix + event : event
+    , listeners = this._events[evt];
+
+  if (!listeners) return 0;
+  if (listeners.fn) return 1;
+  return listeners.length;
+};
+
+/**
  * Calls each of the listeners registered for a given event.
  *
- * @param {String|Symbol} event The event name.
+ * @param {(String|Symbol)} event The event name.
  * @returns {Boolean} `true` if the event had listeners, else `false`.
- * @api public
+ * @public
  */
 EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
   var evt = prefix ? prefix + event : event;
@@ -242,60 +295,45 @@ EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
 /**
  * Add a listener for a given event.
  *
- * @param {String|Symbol} event The event name.
+ * @param {(String|Symbol)} event The event name.
  * @param {Function} fn The listener function.
- * @param {Mixed} [context=this] The context to invoke the listener with.
+ * @param {*} [context=this] The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
- * @api public
+ * @public
  */
 EventEmitter.prototype.on = function on(event, fn, context) {
-  var listener = new EE(fn, context || this)
-    , evt = prefix ? prefix + event : event;
-
-  if (!this._events[evt]) this._events[evt] = listener, this._eventsCount++;
-  else if (!this._events[evt].fn) this._events[evt].push(listener);
-  else this._events[evt] = [this._events[evt], listener];
-
-  return this;
+  return addListener(this, event, fn, context, false);
 };
 
 /**
  * Add a one-time listener for a given event.
  *
- * @param {String|Symbol} event The event name.
+ * @param {(String|Symbol)} event The event name.
  * @param {Function} fn The listener function.
- * @param {Mixed} [context=this] The context to invoke the listener with.
+ * @param {*} [context=this] The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
- * @api public
+ * @public
  */
 EventEmitter.prototype.once = function once(event, fn, context) {
-  var listener = new EE(fn, context || this, true)
-    , evt = prefix ? prefix + event : event;
-
-  if (!this._events[evt]) this._events[evt] = listener, this._eventsCount++;
-  else if (!this._events[evt].fn) this._events[evt].push(listener);
-  else this._events[evt] = [this._events[evt], listener];
-
-  return this;
+  return addListener(this, event, fn, context, true);
 };
 
 /**
  * Remove the listeners of a given event.
  *
- * @param {String|Symbol} event The event name.
+ * @param {(String|Symbol)} event The event name.
  * @param {Function} fn Only remove the listeners that match this function.
- * @param {Mixed} context Only remove the listeners that have this context.
+ * @param {*} context Only remove the listeners that have this context.
  * @param {Boolean} once Only remove one-time listeners.
  * @returns {EventEmitter} `this`.
- * @api public
+ * @public
  */
 EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
   var evt = prefix ? prefix + event : event;
 
   if (!this._events[evt]) return this;
   if (!fn) {
-    if (--this._eventsCount === 0) this._events = new Events();
-    else delete this._events[evt];
+    clearEvent(this, evt);
     return this;
   }
 
@@ -303,19 +341,18 @@ EventEmitter.prototype.removeListener = function removeListener(event, fn, conte
 
   if (listeners.fn) {
     if (
-         listeners.fn === fn
-      && (!once || listeners.once)
-      && (!context || listeners.context === context)
+      listeners.fn === fn &&
+      (!once || listeners.once) &&
+      (!context || listeners.context === context)
     ) {
-      if (--this._eventsCount === 0) this._events = new Events();
-      else delete this._events[evt];
+      clearEvent(this, evt);
     }
   } else {
     for (var i = 0, events = [], length = listeners.length; i < length; i++) {
       if (
-           listeners[i].fn !== fn
-        || (once && !listeners[i].once)
-        || (context && listeners[i].context !== context)
+        listeners[i].fn !== fn ||
+        (once && !listeners[i].once) ||
+        (context && listeners[i].context !== context)
       ) {
         events.push(listeners[i]);
       }
@@ -325,8 +362,7 @@ EventEmitter.prototype.removeListener = function removeListener(event, fn, conte
     // Reset the array, or remove it completely if we have no more listeners.
     //
     if (events.length) this._events[evt] = events.length === 1 ? events[0] : events;
-    else if (--this._eventsCount === 0) this._events = new Events();
-    else delete this._events[evt];
+    else clearEvent(this, evt);
   }
 
   return this;
@@ -335,19 +371,16 @@ EventEmitter.prototype.removeListener = function removeListener(event, fn, conte
 /**
  * Remove all listeners, or those of the specified event.
  *
- * @param {String|Symbol} [event] The event name.
+ * @param {(String|Symbol)} [event] The event name.
  * @returns {EventEmitter} `this`.
- * @api public
+ * @public
  */
 EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
   var evt;
 
   if (event) {
     evt = prefix ? prefix + event : event;
-    if (this._events[evt]) {
-      if (--this._eventsCount === 0) this._events = new Events();
-      else delete this._events[evt];
-    }
+    if (this._events[evt]) clearEvent(this, evt);
   } else {
     this._events = new Events();
     this._eventsCount = 0;
@@ -361,13 +394,6 @@ EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
 //
 EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
 EventEmitter.prototype.addListener = EventEmitter.prototype.on;
-
-//
-// This function doesn't apply anymore.
-//
-EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
-  return this;
-};
 
 //
 // Expose the prefix.
@@ -18570,13 +18596,130 @@ else {
 })(Math);
 
 },{}],185:[function(require,module,exports){
+// yy-counter
+// In-browser counter to watch changeable values like counters or FPS
+// David Figatner
+// (c) YOPEY YOPEY LLC 2017
+// MIT License
+// https://github.com/davidfig/counter
+
+module.exports = class Counter
+{
+    /**
+     * @param {object} [options]
+     * @param {string} [options.side=rightbottom] side to place the panel (combination of right/left and bottom/top)
+     * @param {number} [options.padding=7px]
+     * @param {string} [options.color=white]
+     * @param {string} [options.background=rgba(0,0,0,0.5)]
+     * @param {*} {options.xxx} where xxx is a CSS style for the div
+     */
+    constructor(options)
+    {
+        options = options || {}
+        options.side = options.side || 'rightbottom'
+        options.side.toLowerCase()
+        options.padding = options.padding || '7px'
+        options.color = options.color || 'white'
+        options.background = options.background || 'rgba(0,0,0,0.5)'
+        this.div = document.createElement('div')
+        Counter.findParent(options.side).appendChild(this.div)
+        for (let style in options)
+        {
+            if (style !== 'parent' && style !== 'side')
+            {
+                this.div.style[style] = options[style]
+            }
+        }
+    }
+
+    /**
+     * find the parent div for one of the corners
+     * @param {string} [options.side] side to place the panel (combination of right/left and bottom/top)
+     * @return {HTMLElement}
+     */
+    static findParent(side)
+    {
+        const styles = []
+        let name = 'yy-counter-'
+        if (side.indexOf('left') !== -1)
+        {
+            name += 'left-'
+            styles['left'] = 0
+        }
+        else
+        {
+            name += 'right-'
+            styles['right'] = 0
+        }
+        if (side.indexOf('top') !== -1)
+        {
+            name += 'top'
+            styles['top'] = 0
+        }
+        else
+        {
+            name += 'bottom'
+            styles['bottom'] = 0
+        }
+        const test = document.getElementById(name)
+        if (test)
+        {
+            return test
+        }
+        const container = document.createElement('div')
+        container.id = name
+        container.style.overflow = 'hidden'
+        container.style.position = 'fixed'
+        container.style.zIndex = 10000
+        container.style.pointerEvents = 'none'
+        container.style.userSelect = 'none'
+        for (let style in styles)
+        {
+            container.style[style] = styles[style]
+        }
+        document.body.appendChild(container)
+        return container
+    }
+
+    /**
+     * replaces the innerHTML of the console
+     * @param {string|number} text1
+     * @param {string|number} [text2]
+     * @param {string|number} [...textn] any number of arguments
+     */
+    log()
+    {
+        let s = ''
+        for (let arg of arguments)
+        {
+            s += '<div>' + arg + '</div>'
+        }
+        this.div.innerHTML =  s
+    }
+
+    /**
+     * appends to the innerHTML of the console
+     * @param {string|number} text1
+     * @param {string|number} [text2]
+     * @param {string|number} [...textn] any number of arguments
+     */
+    append()
+    {
+        let s = this.div.innerHTML
+        for (let arg of arguments)
+        {
+            s += '<div>' + arg + '</div>'
+        }
+        this.div.innerHTML = s
+    }
+}
+},{}],186:[function(require,module,exports){
 const Color = require('tinycolor2')
+const Counter = require('yy-counter')
 
 const STYLES = {
-    'position': 'fixed',
     'background': 'rgba(0, 0, 0, 0.5)',
     'color': 'white',
-    'zIndex': 1001
 }
 
 const STYLES_FPS = {
@@ -18597,7 +18740,6 @@ module.exports = class FPS
      * @param {number} [options.meterWidth=100] width of meter div
      * @param {number} [options.meterHeight=25] height of meter div
      * @param {number} [options.meterLineHeight=4] height of meter line
-     * @param {HTMLElement} [options.parent=document.body]
      * @param {styles[]} [options.styles] CSS styles to apply to the div (in javascript format)
      * @param {styles[]} [options.stylesFPS] CSS styles to apply to the FPS text (in javascript format)
      * @param {styles[]} [options.stylesMeter] CSS styles to apply to the FPS meter (in javascript format)
@@ -18612,9 +18754,7 @@ module.exports = class FPS
         this.meterHeight = this.options.meterHeight || 25
         this.meterLineHeight = this.options.meterLineHeight || 4
         this.div = document.createElement('div')
-        this.parent = this.options.parent || document.body
-        this.parent.appendChild(this.div)
-        this.side(this.options)
+        Counter.findParent(this.options.side || 'bottom-right').appendChild(this.div)
         this.style(this.div, STYLES, this.options.styles)
         this.divFPS()
         this.meter = typeof this.options.meter === 'undefined' || this.options.meter
@@ -18622,6 +18762,19 @@ module.exports = class FPS
         this.frameNumber = 0
         this.lastUpdate = 0
         this.lastFPS = '--'
+    }
+
+    /**
+     * change desired FPS
+     * @type {number}
+     */
+    get fps()
+    {
+        return this.FPS
+    }
+    set fps(value)
+    {
+        this.FPS = value
     }
 
     /**
@@ -18678,8 +18831,8 @@ module.exports = class FPS
         const options = this.options
         const divFPS = document.createElement('div')
         div.appendChild(divFPS)
-        this.fps = document.createElement('span')
-        divFPS.appendChild(this.fps)
+        this.fpsSpan = document.createElement('span')
+        divFPS.appendChild(this.fpsSpan)
         const span = document.createElement('span')
         divFPS.appendChild(span)
         span.innerText = typeof options.text !== 'undefined' ? options.text : ' FPS'
@@ -18726,7 +18879,7 @@ module.exports = class FPS
             if (this.lastTime !== 0)
             {
                 this.lastFPS = Math.floor(this.frameNumber / (currentTime / 1000))
-                if (this.lastFPS >= FPS - this.tolerance && this.lastFPS <= FPS + this.tolerance)
+                if (this.lastFPS >= this.FPS - this.tolerance && this.lastFPS <= this.FPS + this.tolerance)
                 {
                     this.lastFPS = this.FPS
                 }
@@ -18734,7 +18887,7 @@ module.exports = class FPS
             this.lastTime = performance.now()
             this.frameNumber = 0
         }
-        this.fps.innerText = this.lastFPS
+        this.fpsSpan.innerText = this.lastFPS
         if (this.meterCanvas && this.lastFPS !== '--')
         {
             this.meterUpdate(this.lastFPS / this.FPS)
@@ -18792,7 +18945,7 @@ module.exports = class FPS
         }
     }
 }
-},{"tinycolor2":184}],186:[function(require,module,exports){
+},{"tinycolor2":184,"yy-counter":185}],187:[function(require,module,exports){
 const Events = require('eventemitter3')
 
 /** Entry class for Loop */
@@ -18873,7 +19026,7 @@ class Entry extends Events
 }
 
 module.exports = Entry
-},{"eventemitter3":4}],187:[function(require,module,exports){
+},{"eventemitter3":4}],188:[function(require,module,exports){
 /* Copyright (c) 2017 YOPEY YOPEY LLC */
 
 const Events = require('eventemitter3')
@@ -18886,7 +19039,7 @@ class Loop extends Events
      * @param {number} [options.maxFrameTime=1000/60] maximum time in milliseconds for a frame
      * @param {object} [options.pauseOnBlur] pause loop when app loses focus, start it when app regains focus
      *
-     * @event each(elapsed, Loop, elapsedInLoop)
+     * @event each(elapsed, Loop)
      * @event start(Loop)
      * @event stop(Loop)
      */
@@ -18901,7 +19054,6 @@ class Loop extends Events
             window.addEventListener('focus', this.startBlur.bind(this))
         }
         this.list = []
-        this.loopBound = this.loop.bind(this)
     }
 
     /**
@@ -18913,11 +19065,7 @@ class Loop extends Events
         if (!this.running)
         {
             this.running = true
-            if (!this.waiting)
-            {
-                this.last = performance.now()
-                this.loop()
-            }
+            this.loop(0)
             this.emit('start', this)
         }
         return this
@@ -18955,6 +19103,11 @@ class Loop extends Events
      */
     stop()
     {
+        if (this.handle)
+        {
+            window.cancelAnimationFrame(this.handle)
+            this.handle = null
+        }
         this.running = false
         this.blurred = false
         this.emit('stop', this)
@@ -18963,16 +19116,12 @@ class Loop extends Events
 
     /**
      * loop through updates; can be called manually each frame, or called automatically as part of start()
+     * @param {number} elapsed time since last call (will be clamped to this.maxFrameTime)
      */
     update(elapsed)
     {
-        const now = performance.now()
-        if (arguments.length === 0)
-        {
-            const maxFrameTime = this.maxFrameTime
-            elapsed = now - this.last
-            elapsed = elapsed > maxFrameTime ? maxFrameTime : elapsed
-        }
+        const maxFrameTime = this.maxFrameTime
+        elapsed = elapsed > maxFrameTime ? maxFrameTime : elapsed
         for (let entry of this.list)
         {
             if (entry.update(elapsed))
@@ -18980,26 +19129,19 @@ class Loop extends Events
                 this.remove(entry)
             }
         }
-        this.emit('each', elapsed, this, now - performance.now())
-        this.last = now
+        this.emit('each', elapsed, this)
     }
 
     /**
      * internal loop through animations
      * @private
      */
-    loop()
+    loop(elapsed)
     {
         if (this.running)
         {
-            this.waiting = false
-            this.update()
-            requestAnimationFrame(this.loopBound)
-            this.waiting = true
-        }
-        else
-        {
-            this.waiting = false
+            this.update(elapsed)
+            this.handle = requestAnimationFrame((elapsed) => this.loop(elapsed))
         }
     }
 
@@ -19078,4 +19220,4 @@ const Entry = require('./entry')
 
 Loop.entry = Entry
 module.exports = Loop
-},{"./entry":186,"eventemitter3":4}]},{},[1]);
+},{"./entry":187,"eventemitter3":4}]},{},[1]);
