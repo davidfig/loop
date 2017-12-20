@@ -32,9 +32,9 @@
     "devDependencies": {
         "fork-me-github": "^1.0.2",
         "highlight.js": "^9.12.0",
-        "yy-fps": "^0.3.1"
+        "yy-fps": "^0.5.3"
     },
     "dependencies": {
-        "eventemitter3": "^2.0.3"
+        "eventemitter3": "^3.0.0"
     }
 }

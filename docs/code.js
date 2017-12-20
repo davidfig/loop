@@ -8,6 +8,7 @@ function test()
     // create loop
     const loop = new Loop({ pauseOnBlur: true })
     loop.interval(() => fps.frame())
+
     // timer that calls function each frame
     let total = 0
     loop.interval(
