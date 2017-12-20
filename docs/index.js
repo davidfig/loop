@@ -19050,8 +19050,8 @@ class Loop extends Events
         this.maxFrameTime = options.maxFrameTime || 1000 / 60
         if (options.pauseOnBlur)
         {
-            window.addEventListener('blur', this.stopBlur.bind(this))
-            window.addEventListener('focus', this.startBlur.bind(this))
+            window.addEventListener('blur', () => this.stopBlur())
+            window.addEventListener('focus', () => this.startBlur())
         }
         this.list = []
     }
