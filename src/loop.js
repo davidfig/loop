@@ -25,6 +25,7 @@ class Loop extends Events
             window.addEventListener('focus', this.startBlur.bind(this))
         }
         this.list = []
+        this.loopBound = this.loop.bind(this)
     }
 
     /**
@@ -38,6 +39,7 @@ class Loop extends Events
             this.running = true
             if (!this.waiting)
             {
+                this.last = performance.now()
                 this.loop()
             }
             this.emit('start', this)
@@ -86,11 +88,15 @@ class Loop extends Events
     /**
      * loop through updates; can be called manually each frame, or called automatically as part of start()
      */
-    update()
+    update(elapsed)
     {
         const now = performance.now()
-        let elapsed = now - this.last ? this.last : 0
-        elapsed = elapsed > this.maxFrameTime ? this.maxFrameTime : elapsed
+        if (arguments.length === 0)
+        {
+            const maxFrameTime = this.maxFrameTime
+            elapsed = now - this.last
+            elapsed = elapsed > maxFrameTime ? maxFrameTime : elapsed
+        }
         for (let entry of this.list)
         {
             if (entry.update(elapsed))
@@ -112,7 +118,7 @@ class Loop extends Events
         {
             this.waiting = false
             this.update()
-            requestAnimationFrame(this.loop.bind(this))
+            requestAnimationFrame(this.loopBound)
             this.waiting = true
         }
         else

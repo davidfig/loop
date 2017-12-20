@@ -39,7 +39,7 @@ https://davidfig.github.io/loop/
 
 ## API
 ### src/loop.js
-```
+```js
     /**
      * basic loop support
      * @param {object} [options]
@@ -67,7 +67,7 @@ https://davidfig.github.io/loop/
     /**
      * loop through updates; can be called manually each frame, or called automatically as part of start()
      */
-    update()
+    update(elapsed)
 
     /**
      * adds a callback to the loop
@@ -106,9 +106,10 @@ https://davidfig.github.io/loop/
      * @type {number} count of running animations
      */
     get countRunning()
+
 ```
 ### src/entry.js
-```
+```js
 /** Entry class for Loop */
 class Entry extends Events
 {
@@ -132,6 +133,7 @@ class Entry extends Events
      * @type {boolean} pause this entry
      */
     set pause(value)
+
 ```
 ## License  
 MIT License  
