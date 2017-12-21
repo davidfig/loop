@@ -1,1 +1,4 @@
-module.exports = require('./src/loop')
+const Loop = require('./src/loop')
+Loop.entry = require('./src/entry')
+
+module.exports = Loop

@@ -97,7 +97,7 @@ class Loop extends Events
         {
             if (entry.update(elapsed))
             {
-                this.remove(entry)
+                this.list.splice(this.list.indexOf(entry), 1)
             }
         }
         this.emit('each', elapsed, this)
@@ -118,12 +118,26 @@ class Loop extends Events
 
     /**
      * adds a callback to the loop
+     * @deprecated use add() instead
      * @param {function} callback
      * @param {number} [time=0] in milliseconds to call this update (0=every frame)
      * @param {number} [count=0] number of times to run this update (0=infinite)
      * @return {object} entry - used to remove or change the parameters of the update
      */
     interval(callback, time, count)
+    {
+        console.warn('yy-loop: interval() deprecated. Use add() instead.')
+        this.add(callback, time, count)
+    }
+
+    /**
+     * adds a callback to the loop
+     * @param {function} callback
+     * @param {number} [time=0] in milliseconds to call this update (0=every frame)
+     * @param {number} [count=0] number of times to run this update (0=infinite)
+     * @return {object} entry - used to remove or change the parameters of the update
+     */
+    add(callback, time, count)
     {
         const entry = new Entry(callback, time, count)
         this.list.push(entry)
@@ -138,7 +152,7 @@ class Loop extends Events
      */
     timeout(callback, time)
     {
-        return this.interval(callback, time, 1)
+        return this.add(callback, time, 1)
     }
 
     /**

@@ -8,11 +8,11 @@ function test()
 {
     // create loop
     const loop = new Loop({ pauseOnBlur: true })
-    loop.interval(() => fps.frame())
+    loop.add(() => fps.frame())
 
     // timer that calls function each frame
     let total = 0
-    loop.interval(
+    loop.add(
         function (elapsed)
         {
             total += elapsed
@@ -21,7 +21,7 @@ function test()
 
     // callback with .on() after each 5-second
     let total5 = 0
-    const total5Loop = loop.interval(null, 5000)
+    const total5Loop = loop.add(null, 5000)
     total5Loop.on('each',
         function ()
         {
@@ -30,11 +30,11 @@ function test()
         })
 
     // calls function every 5-seconds for one time
-    const total1Loop = loop.interval(null, 5000, 1)
+    const total1Loop = loop.add(null, 5000, 1)
     total1Loop.on('each', () => document.getElementById('one-time').innerText = 'done')
 
     // calls function every frame for 10 times
-    const total10Loop = loop.interval(
+    const total10Loop = loop.add(
         function (elapsed, entry)
         {
             document.getElementById('ten-times').innerText = entry.count
@@ -73,8 +73,11 @@ module.exports = function highlight()
 // for eslint
 /* globals window, XMLHttpRequest, document */
 },{"highlight.js":7}],3:[function(require,module,exports){
-module.exports = require('./src/loop')
-},{"./src/loop":188}],4:[function(require,module,exports){
+const Loop = require('./src/loop')
+Loop.entry = require('./src/entry')
+
+module.exports = Loop
+},{"./src/entry":187,"./src/loop":188}],4:[function(require,module,exports){
 'use strict';
 
 var has = Object.prototype.hasOwnProperty
@@ -19126,7 +19129,7 @@ class Loop extends Events
         {
             if (entry.update(elapsed))
             {
-                this.remove(entry)
+                this.list.splice(this.list.indexOf(entry), 1)
             }
         }
         this.emit('each', elapsed, this)
@@ -19147,12 +19150,26 @@ class Loop extends Events
 
     /**
      * adds a callback to the loop
+     * @deprecated use add() instead
      * @param {function} callback
      * @param {number} [time=0] in milliseconds to call this update (0=every frame)
      * @param {number} [count=0] number of times to run this update (0=infinite)
      * @return {object} entry - used to remove or change the parameters of the update
      */
     interval(callback, time, count)
+    {
+        console.warn('yy-loop: interval() deprecated. Use add() instead.')
+        this.add(callback, time, count)
+    }
+
+    /**
+     * adds a callback to the loop
+     * @param {function} callback
+     * @param {number} [time=0] in milliseconds to call this update (0=every frame)
+     * @param {number} [count=0] number of times to run this update (0=infinite)
+     * @return {object} entry - used to remove or change the parameters of the update
+     */
+    add(callback, time, count)
     {
         const entry = new Entry(callback, time, count)
         this.list.push(entry)
@@ -19167,7 +19184,7 @@ class Loop extends Events
      */
     timeout(callback, time)
     {
-        return this.interval(callback, time, 1)
+        return this.add(callback, time, 1)
     }
 
     /**

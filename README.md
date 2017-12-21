@@ -72,12 +72,22 @@ https://davidfig.github.io/loop/
 
     /**
      * adds a callback to the loop
+     * @deprecated use add() instead
      * @param {function} callback
      * @param {number} [time=0] in milliseconds to call this update (0=every frame)
      * @param {number} [count=0] number of times to run this update (0=infinite)
      * @return {object} entry - used to remove or change the parameters of the update
      */
     interval(callback, time, count)
+
+    /**
+     * adds a callback to the loop
+     * @param {function} callback
+     * @param {number} [time=0] in milliseconds to call this update (0=every frame)
+     * @param {number} [count=0] number of times to run this update (0=infinite)
+     * @return {object} entry - used to remove or change the parameters of the update
+     */
+    add(callback, time, count)
 
     /**
      * adds a one-time callback to the loop

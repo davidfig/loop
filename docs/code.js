@@ -7,11 +7,11 @@ function test()
 {
     // create loop
     const loop = new Loop({ pauseOnBlur: true })
-    loop.interval(() => fps.frame())
+    loop.add(() => fps.frame())
 
     // timer that calls function each frame
     let total = 0
-    loop.interval(
+    loop.add(
         function (elapsed)
         {
             total += elapsed
@@ -20,7 +20,7 @@ function test()
 
     // callback with .on() after each 5-second
     let total5 = 0
-    const total5Loop = loop.interval(null, 5000)
+    const total5Loop = loop.add(null, 5000)
     total5Loop.on('each',
         function ()
         {
@@ -29,11 +29,11 @@ function test()
         })
 
     // calls function every 5-seconds for one time
-    const total1Loop = loop.interval(null, 5000, 1)
+    const total1Loop = loop.add(null, 5000, 1)
     total1Loop.on('each', () => document.getElementById('one-time').innerText = 'done')
 
     // calls function every frame for 10 times
-    const total10Loop = loop.interval(
+    const total10Loop = loop.add(
         function (elapsed, entry)
         {
             document.getElementById('ten-times').innerText = entry.count
